@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>綜合科加護病房管路監測儀表板</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  /* ====== 設定區：填入你的 GAS Web App 網址 ====== */
+  /* 在 index.html 部署後可不重啟即時切換，亦可從畫面右上角「設定 API」按鈕修改 */
+</style>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --primary: #b91c2c;
+    --primary-dark: #8b1521;
+    --bg: #f4f6fa;
+    --card: #ffffff;
+    --border: #e2e6ee;
+    --text: #1f2937;
+    --text-muted: #6b7280;
+    --accent: #2563eb;
+    --green: #16a34a;
+    --orange: #ea580c;
+    --shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  header .header-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  header button {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  header button:hover { background: rgba(255,255,255,0.25); }
+
+  /* Container */
+  .container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+  }
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .filter-group label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .filter-group input[type="date"], .filter-group select {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    min-width: 140px;
+  }
+  .chip-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .chip.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+  .chip:hover:not(.active) { background: #f3f4f6; }
+
+  .filter-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .btn {
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .btn:hover { background: #f3f4f6; }
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+
+  .filter-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+  .filter-status strong { color: var(--primary); font-size: 14px; }
+
+  /* KPI cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--accent);
+  }
+  .kpi-card.k-restraint::before { background: #f59e0b; }
+  .kpi-card.k-reintub::before { background: #ef4444; }
+  .kpi-card.k-noharm::before { background: var(--green); }
+  .kpi-card.k-sac::before { background: #8b5cf6; }
+  .kpi-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .kpi-main {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .kpi-main .unit {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+  .kpi-rate {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  /* Chart grid */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 12px;
+  }
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+  }
+  .chart-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--accent);
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .chart-card .chart-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 240px;
+  }
+  .chart-card.span-3 { grid-column: span 3; }
+  .chart-card.span-4 { grid-column: span 4; }
+  .chart-card.span-6 { grid-column: span 6; }
+  .chart-card.span-12 { grid-column: span 12; }
+
+  /* Loading & empty states */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .overlay.hidden { display: none; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid #e5e7eb;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-tip {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 30px 10px;
+    font-size: 13px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    z-index: 2000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: #b91c2c; }
+
+  /* Modal */
+  .modal-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+  }
+  .modal-mask.show { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px 24px;
+    width: 90%;
+    max-width: 500px;
+  }
+  .modal h2 { margin: 0 0 12px 0; font-size: 18px; }
+  .modal input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .modal-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    line-height: 1.6;
+  }
+
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .chart-card.span-3 { grid-column: span 6; }
+    .chart-card.span-4 { grid-column: span 6; }
+    .chart-card.span-6 { grid-column: span 12; }
+  }
+  @media (max-width: 768px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-card.span-3, .chart-card.span-4, .chart-card.span-6 { grid-column: span 12; }
+    header h1 { font-size: 16px; }
+    .container { padding: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏥 綜合科加護病房管路監測儀表板</h1>
+  <div class="header-right">
+    <span id="updateTime" style="font-size:12px; opacity:0.85;"></span>
+    <button onclick="reloadData()">🔄 重新整理</button>
+    <button onclick="openSettings()">⚙ 設定 API</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- 篩選器 -->
+  <div class="filter-bar">
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>起始日期</label>
+        <input type="date" id="startDate" onchange="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label>結束日期</label>
+        <input type="date" id="endDate" onchange="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label>班別</label>
+        <div class="chip-group" id="shiftChips"></div>
+      </div>
+      <div class="filter-group">
+        <label>年資模式</label>
+        <select id="senMode" onchange="rebuildSeniorityChips()">
+          <option value="years">年數區間</option>
+          <option value="level">職級</option>
+        </select>
+      </div>
+      <div class="filter-group" style="flex:1; min-width:240px;">
+        <label>年資</label>
+        <div class="chip-group" id="senChips"></div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn" onclick="resetFilters()">重置</button>
+      </div>
+    </div>
+    <div class="filter-status" id="filterStatus">資料載入中…</div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi-card">
+      <div class="kpi-label">異常事件</div>
+      <div class="kpi-main"><span id="kpi-total">0</span><span class="unit">件</span></div>
+      <div class="kpi-rate" id="kpi-total-sub">&nbsp;</div>
+    </div>
+    <div class="kpi-card k-restraint">
+      <div class="kpi-label">約束件數</div>
+      <div class="kpi-main"><span id="kpi-restraint">0</span><span class="unit">件</span></div>
+      <div class="kpi-rate">約束率 <span id="kpi-restraint-rate">0%</span></div>
+    </div>
+    <div class="kpi-card k-reintub">
+      <div class="kpi-label">重新插管件數</div>
+      <div class="kpi-main"><span id="kpi-reintub">0</span><span class="unit">件</span></div>
+      <div class="kpi-rate">重新插管率 <span id="kpi-reintub-rate">0%</span></div>
+    </div>
+    <div class="kpi-card k-noharm">
+      <div class="kpi-label">嚴重程度-無傷害</div>
+      <div class="kpi-main"><span id="kpi-noharm">0</span><span class="unit">件</span></div>
+      <div class="kpi-rate">無傷害率 <span id="kpi-noharm-rate">0%</span></div>
+    </div>
+    <div class="kpi-card k-sac">
+      <div class="kpi-label">SAC分級-4級</div>
+      <div class="kpi-main"><span id="kpi-sac4">0</span><span class="unit">件</span></div>
+      <div class="kpi-rate">SAC4級率 <span id="kpi-sac4-rate">0%</span></div>
+    </div>
+  </div>
+
+  <!-- 圖表 -->
+  <div class="chart-grid">
+    <div class="chart-card span-3">
+      <h3>異常管路種類</h3>
+      <div class="chart-wrap"><canvas id="chartTube"></canvas></div>
+    </div>
+    <div class="chart-card span-3">
+      <h3>異常事件原因</h3>
+      <div class="chart-wrap"><canvas id="chartReason"></canvas></div>
+    </div>
+    <div class="chart-card span-3">
+      <h3>病人性別比例</h3>
+      <div class="chart-wrap"><canvas id="chartGender"></canvas></div>
+    </div>
+    <div class="chart-card span-3">
+      <h3>異常事件 - 年齡</h3>
+      <div class="chart-wrap"><canvas id="chartAge"></canvas></div>
+    </div>
+
+    <div class="chart-card span-6">
+      <h3>每月管路種類異常事件</h3>
+      <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
+    </div>
+    <div class="chart-card span-3">
+      <h3>異常事件年資別</h3>
+      <div class="chart-wrap"><canvas id="chartSeniority"></canvas></div>
+    </div>
+    <div class="chart-card span-3">
+      <h3>異常事件班別</h3>
+      <div class="chart-wrap"><canvas id="chartShift"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div id="overlayText" style="color:var(--text-muted);">載入資料中…</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- API 設定 modal -->
+<div class="modal-mask" id="settingsModal">
+  <div class="modal">
+    <h2>⚙ 設定 Google Apps Script API</h2>
+    <div class="modal-hint">
+      請貼上你部署 GAS Web App 後取得的網址（應為 <code>https://script.google.com/macros/s/.../exec</code>）。<br>
+      設定會儲存於瀏覽器，下次開啟自動帶入。
+    </div>
+    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/AKfyc.../exec">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeSettings()">取消</button>
+      <button class="btn btn-primary" onclick="saveSettings()">儲存並重新載入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * 設定區
+ * ============================================================ */
+// 把下面這行換成你部署 GAS 後拿到的網址；
+// 留空則開啟頁面後從右上角「設定 API」輸入（會存於 localStorage）
+var DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzy0X8X4rYLQQCeXkkaA1Yq511chzLMZavc_AoM7A6SYlMqmBihZw5HULh9PNHTFlwHVQ/exec';
+var STORAGE_KEY = 'icu_pipeline_api_url';
+
+function getApiUrl() {
+  return localStorage.getItem(STORAGE_KEY) || DEFAULT_API_URL || '';
+}
+
+/* ============================================================
+ * 全域狀態
+ * ============================================================ */
+var ALL_RECORDS = [];
+var FILTERED = [];
+var CHARTS = {}; // 各 chart 物件
+
+var SHIFT_OPTIONS = ['D', 'E', 'N'];
+var SHIFT_LABELS = { D: 'D 白班', E: 'E 小夜', N: 'N 大夜' };
+
+// 年資年數區間
+var SENIORITY_BUCKETS = [
+  { label: '0-1年',   min: 0,  max: 2 },
+  { label: '2年',     min: 2,  max: 3 },
+  { label: '3-5年',   min: 3,  max: 6 },
+  { label: '6-10年',  min: 6,  max: 11 },
+  { label: '11-15年', min: 11, max: 16 },
+  { label: '16-20年', min: 16, max: 21 },
+  { label: '20年以上', min: 21, max: Infinity }
+];
+
+// 年齡區間
+var AGE_BUCKETS = [
+  { label: '50歲以下',  min: 0,  max: 51 },
+  { label: '51-60歲',   min: 51, max: 61 },
+  { label: '61-70歲',   min: 61, max: 71 },
+  { label: '71-80歲',   min: 71, max: 81 },
+  { label: '81-90歲',   min: 81, max: 91 },
+  { label: '91歲以上',  min: 91, max: Infinity }
+];
+
+// 顏色盤
+var PALETTE = [
+  '#ef4444', '#f59e0b', '#eab308', '#84cc16', '#22c55e',
+  '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6',
+  '#ec4899', '#f43f5e', '#a855f7', '#0ea5e9', '#10b981'
+];
+
+/* ============================================================
+ * 工具
+ * ============================================================ */
+function $(id) { return document.getElementById(id); }
+
+function toast(msg, type) {
+  var t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type === 'err' ? ' error' : '');
+  setTimeout(function() { t.className = 'toast' + (type === 'err' ? ' error' : ''); }, 2400);
+}
+
+function showOverlay(text) {
+  $('overlayText').textContent = text || '載入中…';
+  $('overlay').classList.remove('hidden');
+}
+function hideOverlay() { $('overlay').classList.add('hidden'); }
+
+function getCheckedChips(containerId) {
+  var nodes = document.querySelectorAll('#' + containerId + ' .chip.active');
+  var arr = [];
+  nodes.forEach(function(n) { arr.push(n.dataset.value); });
+  return arr;
+}
+
+function fmtPct(n, d) {
+  if (!d) return '0%';
+  return ((n / d) * 100).toFixed(1) + '%';
+}
+
+function getBucketLabel(buckets, v) {
+  if (v === null || v === undefined || isNaN(v)) return null;
+  for (var i = 0; i < buckets.length; i++) {
+    if (v >= buckets[i].min && v < buckets[i].max) return buckets[i].label;
+  }
+  return null;
+}
+
+/* ============================================================
+ * 取資料
+ * ============================================================ */
+function fetchData() {
+  var url = getApiUrl();
+  if (!url) {
+    hideOverlay();
+    openSettings();
+    toast('請先設定 GAS API 網址', 'err');
+    return;
+  }
+  showOverlay('從 Google Sheet 取得資料中…');
+  var u = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=getRecords&_t=' + Date.now();
+  fetch(u)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        toast('讀取失敗：' + data.error, 'err');
+        hideOverlay();
+        return;
+      }
+      ALL_RECORDS = data.records || [];
+      $('updateTime').textContent = '更新：' + (data.updatedAt ? new Date(data.updatedAt).toLocaleString('zh-TW') : new Date().toLocaleString('zh-TW'));
+      initFiltersFromData();
+      applyFilters();
+      hideOverlay();
+    })
+    .catch(function(err) {
+      toast('連線失敗：' + err, 'err');
+      hideOverlay();
+    });
+}
+
+function reloadData() { fetchData(); }
+
+/* ============================================================
+ * 初始化篩選器
+ * ============================================================ */
+function initFiltersFromData() {
+  // 預設日期區間 = 全部資料的最早 ~ 最晚
+  var dates = ALL_RECORDS.map(function(r) { return r.date; }).filter(Boolean).sort();
+  if (dates.length) {
+    if (!$('startDate').value) $('startDate').value = dates[0];
+    if (!$('endDate').value)   $('endDate').value   = dates[dates.length - 1];
+  }
+  // 班別 chips
+  var sh = $('shiftChips');
+  sh.innerHTML = '';
+  SHIFT_OPTIONS.forEach(function(s) {
+    var chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset.value = s;
+    chip.textContent = SHIFT_LABELS[s] || s;
+    chip.onclick = function() {
+      chip.classList.toggle('active');
+      applyFilters();
+    };
+    sh.appendChild(chip);
+  });
+  rebuildSeniorityChips();
+}
+
+function rebuildSeniorityChips() {
+  var mode = $('senMode').value;
+  var container = $('senChips');
+  container.innerHTML = '';
+  var options = [];
+  if (mode === 'years') {
+    options = SENIORITY_BUCKETS.map(function(b) { return b.label; });
+  } else {
+    var set = {};
+    ALL_RECORDS.forEach(function(r) { if (r.level) set[r.level] = true; });
+    options = Object.keys(set).sort();
+  }
+  options.forEach(function(opt) {
+    var chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset.value = opt;
+    chip.textContent = opt;
+    chip.onclick = function() {
+      chip.classList.toggle('active');
+      applyFilters();
+    };
+    container.appendChild(chip);
+  });
+  applyFilters();
+}
+
+function resetFilters() {
+  $('startDate').value = '';
+  $('endDate').value = '';
+  document.querySelectorAll('.chip.active').forEach(function(c) { c.classList.remove('active'); });
+  initFiltersFromData();
+  applyFilters();
+}
+
+/* ============================================================
+ * 套用篩選
+ * ============================================================ */
+function applyFilters() {
+  var s = $('startDate').value;
+  var e = $('endDate').value;
+  var shifts = getCheckedChips('shiftChips');
+  var mode = $('senMode').value;
+  var senSel = getCheckedChips('senChips');
+
+  FILTERED = ALL_RECORDS.filter(function(r) {
+    if (s && r.date < s) return false;
+    if (e && r.date > e) return false;
+    if (shifts.length && shifts.indexOf(r.shift) < 0) return false;
+    if (senSel.length) {
+      if (mode === 'years') {
+        var lbl = getBucketLabel(SENIORITY_BUCKETS, r.totalSeniority);
+        if (!lbl || senSel.indexOf(lbl) < 0) return false;
+      } else {
+        if (!r.level || senSel.indexOf(r.level) < 0) return false;
+      }
+    }
+    return true;
+  });
+
+  renderStatus();
+  renderKPIs();
+  renderCharts();
+}
+
+function renderStatus() {
+  var st = $('filterStatus');
+  var tot = ALL_RECORDS.length;
+  var f = FILTERED.length;
+  st.innerHTML = '已套用篩選：共 <strong>' + f + '</strong> / ' + tot + ' 筆異常事件';
+}
+
+/* ============================================================
+ * KPI
+ * ============================================================ */
+function renderKPIs() {
+  var n = FILTERED.length;
+  var restraint = FILTERED.filter(function(r) { return r.restraint === '是'; }).length;
+  var reintub   = FILTERED.filter(function(r) { return r.reintubation === '是'; }).length;
+  var noharm    = FILTERED.filter(function(r) { return r.severity === '無傷害'; }).length;
+  var sac4      = FILTERED.filter(function(r) { return r.sac === 4; }).length;
+
+  $('kpi-total').textContent = n;
+  $('kpi-restraint').textContent = restraint;
+  $('kpi-restraint-rate').textContent = fmtPct(restraint, n);
+  $('kpi-reintub').textContent = reintub;
+  $('kpi-reintub-rate').textContent = fmtPct(reintub, n);
+  $('kpi-noharm').textContent = noharm;
+  $('kpi-noharm-rate').textContent = fmtPct(noharm, n);
+  $('kpi-sac4').textContent = sac4;
+  $('kpi-sac4-rate').textContent = fmtPct(sac4, n);
+}
+
+/* ============================================================
+ * 圖表
+ * ============================================================ */
+function destroyChart(key) {
+  if (CHARTS[key]) {
+    try { CHARTS[key].destroy(); } catch (e) { /* canvas 可能已被替換,忽略 */ }
+    delete CHARTS[key];
+  }
+}
+
+function showEmpty(canvasId) {
+  destroyChart(canvasId);
+  var cv = document.getElementById(canvasId);
+  if (cv && cv.parentElement) {
+    cv.parentElement.innerHTML = '<div class="empty-tip">無資料</div>';
+  }
+}
+
+function countBy(arr, keyFn) {
+  var m = {};
+  arr.forEach(function(r) {
+    var k = keyFn(r);
+    if (k === null || k === undefined || k === '') return;
+    m[k] = (m[k] || 0) + 1;
+  });
+  return m;
+}
+
+function sortedEntries(obj, descByValue) {
+  var arr = Object.keys(obj).map(function(k) { return [k, obj[k]]; });
+  if (descByValue) arr.sort(function(a, b) { return b[1] - a[1]; });
+  return arr;
+}
+
+function makeDonutOrPie(canvasId, dataMap, opts) {
+  destroyChart(canvasId);
+  var entries = sortedEntries(dataMap, true);
+  var labels = entries.map(function(e) { return e[0]; });
+  var values = entries.map(function(e) { return e[1]; });
+  var total = values.reduce(function(a, b) { return a + b; }, 0);
+  if (!labels.length) {
+    showEmpty(canvasId);
+    return;
+  }
+  var cv = $(canvasId);
+  CHARTS[canvasId] = new Chart(cv, {
+    type: opts && opts.type === 'pie' ? 'pie' : 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: labels.map(function(_, i) { return PALETTE[i % PALETTE.length]; }),
+        borderColor: '#fff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { boxWidth: 12, font: { size: 11 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              var v = ctx.parsed;
+              return ctx.label + '：' + v + ' (' + ((v/total)*100).toFixed(1) + '%)';
+            }
+          }
+        },
+        datalabels: false
+      }
+    }
+  });
+}
+
+function makeBar(canvasId, labels, values, color) {
+  destroyChart(canvasId);
+  if (!labels.length || values.every(function(v) { return !v; })) {
+    showEmpty(canvasId);
+    return;
+  }
+  var cv = $(canvasId);
+  CHARTS[canvasId] = new Chart(cv, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: labels.map(function(_, i) { return color || PALETTE[i % PALETTE.length]; }),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ctx.parsed.y + ' 件'; }
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+}
+
+function makeMonthlyLine(canvasId) {
+  destroyChart(canvasId);
+  // 收集所有出現過的月份
+  var monthSet = {};
+  var tubeSet = {};
+  FILTERED.forEach(function(r) {
+    if (!r.ym) return;
+    monthSet[r.ym] = true;
+    if (r.tubeType) tubeSet[r.tubeType] = true;
+  });
+  var months = Object.keys(monthSet).sort(); // ISO ym 字串自然順序
+  var tubes = Object.keys(tubeSet);
+  if (!months.length) {
+    showEmpty(canvasId);
+    return;
+  }
+  var cv = $(canvasId);
+  // 每種管路一條線
+  var datasets = tubes.map(function(t, i) {
+    var color = PALETTE[i % PALETTE.length];
+    var counts = months.map(function(m) {
+      return FILTERED.filter(function(r) { return r.ym === m && r.tubeType === t; }).length;
+    });
+    return {
+      label: t,
+      data: counts,
+      borderColor: color,
+      backgroundColor: color + '33',
+      tension: 0.25,
+      fill: false,
+      pointRadius: 3
+    };
+  });
+  CHARTS[canvasId] = new Chart(cv, {
+    type: 'line',
+    data: { labels: months, datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { boxWidth: 12, font: { size: 11 } }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+}
+
+var CHART_IDS = ['chartTube', 'chartReason', 'chartGender', 'chartAge', 'chartMonthly', 'chartSeniority', 'chartShift'];
+
+function renderCharts() {
+  // 把所有「無資料」狀態的 chart-wrap 還原成 canvas，避免下次有資料時找不到 canvas
+  document.querySelectorAll('.chart-wrap').forEach(function(w, idx) {
+    var id = CHART_IDS[idx];
+    if (id && !w.querySelector('canvas')) {
+      w.innerHTML = '<canvas id="' + id + '"></canvas>';
+    }
+  });
+
+  // 異常管路種類
+  makeDonutOrPie('chartTube', countBy(FILTERED, function(r) { return r.tubeType; }));
+
+  // 異常事件原因
+  makeDonutOrPie('chartReason', countBy(FILTERED, function(r) { return r.reason; }));
+
+  // 病人性別比例
+  makeDonutOrPie('chartGender', countBy(FILTERED, function(r) { return r.gender; }), { type: 'pie' });
+
+  // 異常事件 - 年齡
+  var ageMap = {};
+  AGE_BUCKETS.forEach(function(b) { ageMap[b.label] = 0; });
+  FILTERED.forEach(function(r) {
+    var lbl = getBucketLabel(AGE_BUCKETS, r.age);
+    if (lbl) ageMap[lbl]++;
+  });
+  var ageLabels = AGE_BUCKETS.map(function(b) { return b.label; });
+  var ageValues = ageLabels.map(function(l) { return ageMap[l] || 0; });
+  makeBar('chartAge', ageLabels, ageValues);
+
+  // 每月管路種類
+  makeMonthlyLine('chartMonthly');
+
+  // 異常事件年資別（依當前模式）
+  var mode = $('senMode').value;
+  var senLabels, senValues;
+  if (mode === 'years') {
+    var senMap = {};
+    SENIORITY_BUCKETS.forEach(function(b) { senMap[b.label] = 0; });
+    FILTERED.forEach(function(r) {
+      var lbl = getBucketLabel(SENIORITY_BUCKETS, r.totalSeniority);
+      if (lbl) senMap[lbl]++;
+    });
+    senLabels = SENIORITY_BUCKETS.map(function(b) { return b.label; });
+    senValues = senLabels.map(function(l) { return senMap[l] || 0; });
+  } else {
+    var levelMap = countBy(FILTERED, function(r) { return r.level; });
+    var keys = Object.keys(levelMap).sort();
+    senLabels = keys;
+    senValues = keys.map(function(k) { return levelMap[k]; });
+  }
+  makeBar('chartSeniority', senLabels, senValues, '#3b82f6');
+
+  // 異常事件班別
+  var shiftMap = countBy(FILTERED, function(r) { return r.shift; });
+  // 依 D/E/N 順序顯示
+  var orderedShift = {};
+  SHIFT_OPTIONS.forEach(function(s) {
+    if (shiftMap[s]) orderedShift[(SHIFT_LABELS[s] || s)] = shiftMap[s];
+  });
+  // 也把不在標準清單的塞入
+  Object.keys(shiftMap).forEach(function(k) {
+    if (SHIFT_OPTIONS.indexOf(k) < 0) orderedShift[k] = shiftMap[k];
+  });
+  makeDonutOrPie('chartShift', orderedShift);
+}
+
+/* ============================================================
+ * 設定 modal
+ * ============================================================ */
+function openSettings() {
+  $('apiUrlInput').value = getApiUrl();
+  $('settingsModal').classList.add('show');
+}
+function closeSettings() {
+  $('settingsModal').classList.remove('show');
+}
+function saveSettings() {
+  var v = $('apiUrlInput').value.trim();
+  if (!v) { toast('請輸入網址', 'err'); return; }
+  if (v.indexOf('script.google.com') < 0) {
+    if (!confirm('這看起來不像 Google Apps Script 網址，仍要儲存嗎？')) return;
+  }
+  localStorage.setItem(STORAGE_KEY, v);
+  closeSettings();
+  toast('已儲存，重新載入資料');
+  fetchData();
+}
+
+/* ============================================================
+ * 啟動
+ * ============================================================ */
+window.addEventListener('DOMContentLoaded', function() {
+  fetchData();
+});
+</script>
+
+</body>
+</html>
