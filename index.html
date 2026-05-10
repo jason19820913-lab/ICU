@@ -2,7 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#b91c2c">
 <title>綜合科加護病房管路監測儀表板</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
@@ -551,32 +553,140 @@
     line-height: 1.6;
   }
 
-  /* Responsive */
+  /* ============================================================
+   * RWD 響應式設計
+   * Breakpoints:
+   *   >=1400px  desktop (default)
+   *   1024-1400 small desktop / large tablet (4 KPI / 4 charts/row)
+   *   768-1024  tablet (4 KPI / 2 charts/row)
+   *   480-768   landscape phone / small tablet (2 KPI / 1 chart/row)
+   *   <480      portrait phone (2 KPI / 1 chart/row,字體更小)
+   * ============================================================ */
+
+  /* 大型平板 / 小桌機 */
   @media (max-width: 1400px) {
     .kpi-grid { grid-template-columns: repeat(4, 1fr); }
   }
-  @media (max-width: 1200px) {
-    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+
+  /* 平板 */
+  @media (max-width: 1024px) {
+    .container { padding: 12px; }
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .kpi-card { padding: 10px 12px; }
+    .kpi-main { font-size: 22px; }
+    .kpi-label { font-size: 11px; }
+    .kpi-rate { font-size: 11px; }
+
     .chart-card.span-3 { grid-column: span 6; }
     .chart-card.span-4 { grid-column: span 6; }
     .chart-card.span-6 { grid-column: span 12; }
+
+    header h1 { font-size: 17px; }
+    header .header-right span { display: none; } /* 隱藏更新時間文字 */
+    header button { padding: 6px 10px; font-size: 12px; }
+
+    .filter-bar { padding: 10px 12px; }
+    .filter-row { gap: 10px; }
   }
+
+  /* 平板 / 大型手機 */
   @media (max-width: 768px) {
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-    .chart-card.span-3, .chart-card.span-4, .chart-card.span-6 { grid-column: span 12; }
-    header h1 { font-size: 16px; }
     .container { padding: 10px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpi-card { padding: 10px; }
+    .kpi-card::before { width: 3px; }
+    .kpi-main { font-size: 22px; }
+
+    .chart-card.span-3, .chart-card.span-4, .chart-card.span-6 { grid-column: span 12; }
+    .chart-card { padding: 10px 12px; }
+    .chart-card h3 { font-size: 13px; padding: 5px 8px; }
+    .chart-card .chart-wrap { min-height: 220px; }
+
+    header { padding: 12px 14px; }
+    header h1 { font-size: 15px; }
+    header h1 .icon { display: inline; }
+    header button { padding: 6px 8px; font-size: 11px; }
+
+    .filter-bar { padding: 10px; }
+    .filter-row { gap: 8px; }
+    .filter-group { min-width: 0; }
+    .filter-group label { font-size: 11px; }
+    .filter-group input[type="date"], .filter-group select {
+      font-size: 12px; padding: 6px 8px; min-width: 0; width: 100%;
+    }
+    .filter-actions { margin-left: 0; width: 100%; justify-content: flex-end; }
+    .chip { padding: 6px 12px; font-size: 12px; min-height: 32px; }
+    .filter-status { font-size: 11px; }
+
+    /* 圖表標題的清除選取 ✕ 變得容易按 */
+    .chart-card h3 .clear-x { width: 24px; height: 24px; line-height: 22px; right: 6px; }
+
+    /* Detail table 緊湊版 */
+    .section-title { font-size: 16px; padding-top: 12px; }
+    .table-toolbar { padding: 10px; flex-wrap: wrap; gap: 8px; }
+    .search-group { min-width: 0; }
+    .search-group input { font-size: 12px; padding: 8px 28px 8px 28px; }
+    .count-pill { font-size: 11px; padding: 3px 10px; }
+    .table-scroll {
+      max-height: 480px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .detail-table { font-size: 12px; min-width: 720px; }
+    .detail-table thead th { padding: 8px 8px; font-size: 12px; }
+    .detail-table tbody td { padding: 8px 8px; }
+    .desc-col { min-width: 220px; }
+    .badge { padding: 2px 6px; font-size: 10px; }
+  }
+
+  /* 手機（直立） */
+  @media (max-width: 480px) {
+    .container { padding: 8px; }
+    header { padding: 10px 12px; }
+    header h1 { font-size: 13px; letter-spacing: 0; }
+    header h1 .icon-text { display: none; } /* 「綜合科加護病房」隱藏,只留「管路監測儀表板」*/
+    header .header-right { gap: 4px; }
+    header button { padding: 6px 10px; font-size: 12px; min-height: 32px; }
+    header button .btn-text { display: none; } /* 只顯示 emoji icon */
+
+    .kpi-grid { gap: 6px; margin-bottom: 12px; }
+    .kpi-card { padding: 8px 10px; border-radius: 8px; }
+    .kpi-label { font-size: 10px; margin-bottom: 2px; }
+    .kpi-main { font-size: 18px; }
+    .kpi-main .unit { font-size: 11px; }
+    .kpi-rate { font-size: 10px; margin-top: 2px; }
+
+    .filter-bar { padding: 8px 10px; border-radius: 8px; }
+    .filter-row { gap: 8px; }
+    .filter-group { width: 100%; flex: 1 1 100%; }
+    .filter-group input[type="date"] { width: 100%; }
+    .chip { padding: 5px 10px; font-size: 11px; }
+
+    .chart-card { padding: 8px 10px; border-radius: 8px; }
+    .chart-card h3 { font-size: 12px; padding: 4px 6px; }
+    .chart-card .chart-wrap { min-height: 200px; }
+
+    .section-title { font-size: 14px; }
+    .modal { padding: 16px; }
+    .modal h2 { font-size: 16px; }
+  }
+
+  /* 觸控優化:點擊區更大、無 hover */
+  @media (hover: none) {
+    .chip:hover:not(.active) { background: #fff; }
+    .btn:hover { background: #fff; }
+    .case-row:hover { background: transparent !important; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🏥 綜合科加護病房管路監測儀表板</h1>
+  <h1><span class="icon">🏥</span> <span class="icon-text">綜合科加護病房</span><span class="title-short">管路監測儀表板</span></h1>
   <div class="header-right">
     <span id="updateTime" style="font-size:12px; opacity:0.85;"></span>
-    <button onclick="reloadData()">🔄 重新整理</button>
-    <button onclick="openSettings()">⚙ 設定 API</button>
+    <button onclick="reloadData()" title="重新整理"><span class="btn-icon">🔄</span><span class="btn-text"> 重新整理</span></button>
+    <button onclick="openSettings()" title="設定 API"><span class="btn-icon">⚙</span><span class="btn-text"> 設定 API</span></button>
   </div>
 </header>
 
@@ -1223,6 +1333,18 @@ function sortedEntries(obj, descByValue) {
   return arr;
 }
 
+/* 偵測螢幕寬度做 RWD 圖表調整 */
+function isMobile() { return window.innerWidth <= 768; }
+function isNarrow() { return window.innerWidth <= 480; }
+
+function getLegendPosition() {
+  return isMobile() ? 'bottom' : 'right';
+}
+
+function getLegendFontSize() {
+  return isNarrow() ? 10 : (isMobile() ? 11 : 11);
+}
+
 /* 依選取狀態決定每個 slice 的顏色（未選取時降低透明度） */
 function selectiveColors(labels, sel) {
   return labels.map(function(label, i) {
@@ -1268,8 +1390,8 @@ function makeDonutOrPie(canvasId, dataMap, opts) {
       },
       plugins: {
         legend: {
-          position: 'right',
-          labels: { boxWidth: 12, font: { size: 11 } },
+          position: getLegendPosition(),
+          labels: { boxWidth: 12, padding: 8, font: { size: getLegendFontSize() } },
           onClick: function(e, item, legend) {
             // 圖例點擊也觸發選取
             var label = item.text;
@@ -1399,7 +1521,7 @@ function makeMonthlyLine(canvasId, sourceData) {
       plugins: {
         legend: {
           position: 'top',
-          labels: { boxWidth: 12, font: { size: 11 } }
+          labels: { boxWidth: 12, padding: 6, font: { size: getLegendFontSize() } }
         }
       },
       scales: {
@@ -1728,6 +1850,28 @@ function saveSettings() {
  * ============================================================ */
 window.addEventListener('DOMContentLoaded', function() {
   fetchData();
+});
+
+/* RWD: 視窗縮放/旋轉時重新渲染圖表（修正 legend 位置） */
+var _resizeTimer = null;
+var _lastWidthClass = window.innerWidth <= 480 ? 'xs' : (window.innerWidth <= 768 ? 'sm' : (window.innerWidth <= 1024 ? 'md' : 'lg'));
+window.addEventListener('resize', function() {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(function() {
+    var w = window.innerWidth;
+    var newClass = w <= 480 ? 'xs' : (w <= 768 ? 'sm' : (w <= 1024 ? 'md' : 'lg'));
+    if (newClass !== _lastWidthClass) {
+      _lastWidthClass = newClass;
+      // 跨越斷點才重新渲染整個 dashboard,避免每次拖拉都閃爍
+      if (ALL_RECORDS.length) applyFilters();
+    }
+  }, 200);
+});
+
+window.addEventListener('orientationchange', function() {
+  setTimeout(function() {
+    if (ALL_RECORDS.length) applyFilters();
+  }, 300);
 });
 </script>
 
