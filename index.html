@@ -232,11 +232,58 @@
     padding: 6px 10px;
     border-radius: 6px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
   }
+  .chart-card h3 .clear-x {
+    display: none;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    line-height: 18px;
+    text-align: center;
+    background: rgba(255,255,255,0.25);
+    border-radius: 50%;
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .chart-card h3 .clear-x:hover { background: rgba(255,255,255,0.5); }
+  .chart-card.has-selection h3 { background: var(--primary); }
+  .chart-card.has-selection h3 .clear-x { display: block; }
   .chart-card .chart-wrap {
     position: relative;
     flex: 1;
     min-height: 240px;
+    cursor: pointer;
+  }
+  .filter-status .btn-mini {
+    padding: 2px 8px;
+    font-size: 11px;
+    border: 1px solid var(--primary);
+    background: #fff;
+    color: var(--primary);
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 6px;
+  }
+  .filter-status .btn-mini:hover { background: var(--primary); color: #fff; }
+  .filter-status .sel-tag {
+    display: inline-block;
+    background: #fef2f2;
+    color: var(--primary);
+    border: 1px solid #fecaca;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin: 0 4px 2px 0;
+    font-size: 11px;
   }
   .chart-card.span-3 { grid-column: span 3; }
   .chart-card.span-4 { grid-column: span 4; }
@@ -422,33 +469,33 @@
 
   <!-- 圖表 -->
   <div class="chart-grid">
-    <div class="chart-card span-3">
-      <h3>異常管路種類</h3>
+    <div class="chart-card span-3" data-chart="chartTube">
+      <h3><span>異常管路種類</span><span class="clear-x" onclick="clearChartSelection('chartTube')" title="清除此圖選取">✕</span></h3>
       <div class="chart-wrap"><canvas id="chartTube"></canvas></div>
     </div>
-    <div class="chart-card span-3">
-      <h3>異常事件原因</h3>
+    <div class="chart-card span-3" data-chart="chartReason">
+      <h3><span>異常事件原因</span><span class="clear-x" onclick="clearChartSelection('chartReason')" title="清除此圖選取">✕</span></h3>
       <div class="chart-wrap"><canvas id="chartReason"></canvas></div>
     </div>
-    <div class="chart-card span-3">
-      <h3>病人性別比例</h3>
+    <div class="chart-card span-3" data-chart="chartGender">
+      <h3><span>病人性別比例</span><span class="clear-x" onclick="clearChartSelection('chartGender')" title="清除此圖選取">✕</span></h3>
       <div class="chart-wrap"><canvas id="chartGender"></canvas></div>
     </div>
-    <div class="chart-card span-3">
-      <h3>異常事件 - 年齡</h3>
+    <div class="chart-card span-3" data-chart="chartAge">
+      <h3><span>異常事件 - 年齡</span><span class="clear-x" onclick="clearChartSelection('chartAge')" title="清除此圖選取">✕</span></h3>
       <div class="chart-wrap"><canvas id="chartAge"></canvas></div>
     </div>
 
-    <div class="chart-card span-6">
-      <h3>每月管路種類異常事件</h3>
+    <div class="chart-card span-6" data-chart="chartMonthly">
+      <h3><span>每月管路種類異常事件</span><span class="clear-x" onclick="clearChartSelection('chartMonthly')" title="清除此圖選取">✕</span></h3>
       <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
     </div>
-    <div class="chart-card span-3">
-      <h3>異常事件年資別</h3>
+    <div class="chart-card span-3" data-chart="chartSeniority">
+      <h3><span>異常事件年資別</span><span class="clear-x" onclick="clearChartSelection('chartSeniority')" title="清除此圖選取">✕</span></h3>
       <div class="chart-wrap"><canvas id="chartSeniority"></canvas></div>
     </div>
-    <div class="chart-card span-3">
-      <h3>異常事件班別</h3>
+    <div class="chart-card span-3" data-chart="chartShift">
+      <h3><span>異常事件班別</span><span class="clear-x" onclick="clearChartSelection('chartShift')" title="清除此圖選取">✕</span></h3>
       <div class="chart-wrap"><canvas id="chartShift"></canvas></div>
     </div>
   </div>
@@ -496,6 +543,27 @@ function getApiUrl() {
 var ALL_RECORDS = [];
 var FILTERED = [];
 var CHARTS = {}; // 各 chart 物件
+
+// 跨圖表交叉篩選：每張圖點擊的選取項
+var CHART_SELECTIONS = {
+  chartTube: new Set(),
+  chartReason: new Set(),
+  chartGender: new Set(),
+  chartAge: new Set(),
+  chartMonthly: new Set(),
+  chartSeniority: new Set(),
+  chartShift: new Set()
+};
+
+var CHART_DISPLAY_NAMES = {
+  chartTube: '管路',
+  chartReason: '原因',
+  chartGender: '性別',
+  chartAge: '年齡',
+  chartMonthly: '月份',
+  chartSeniority: '年資',
+  chartShift: '班別'
+};
 
 var SHIFT_OPTIONS = ['D', 'E', 'N'];
 var SHIFT_LABELS = { D: 'D 白班', E: 'E 小夜', N: 'N 大夜' };
@@ -566,6 +634,57 @@ function getBucketLabel(buckets, v) {
   return null;
 }
 
+/* 把記錄轉成各圖表所用的 label（與圖表 label 一致） */
+function getChartLabel(chartId, r) {
+  if (chartId === 'chartTube')     return r.tubeType || null;
+  if (chartId === 'chartReason')   return r.reason || null;
+  if (chartId === 'chartGender')   return r.gender || null;
+  if (chartId === 'chartAge')      return getBucketLabel(AGE_BUCKETS, r.age);
+  if (chartId === 'chartMonthly')  return r.ym || null;
+  if (chartId === 'chartSeniority') {
+    if ($('senMode').value === 'years') return getBucketLabel(SENIORITY_BUCKETS, r.totalSeniority);
+    return r.level || null;
+  }
+  if (chartId === 'chartShift')    return SHIFT_LABELS[r.shift] || r.shift || null;
+  return null;
+}
+
+/* 套用「除了 exceptChartId 之外」所有圖表選取（讓被點擊的圖能保留所有切片） */
+function applyChartSelections(records, exceptChartId) {
+  Object.keys(CHART_SELECTIONS).forEach(function(cid) {
+    if (cid === exceptChartId) return;
+    var sel = CHART_SELECTIONS[cid];
+    if (sel.size === 0) return;
+    records = records.filter(function(r) {
+      var lbl = getChartLabel(cid, r);
+      return lbl && sel.has(lbl);
+    });
+  });
+  return records;
+}
+
+function toggleChartSelection(chartId, label) {
+  if (label === null || label === undefined) return;
+  var sel = CHART_SELECTIONS[chartId];
+  if (sel.has(label)) sel.delete(label);
+  else sel.add(label);
+  applyFilters();
+}
+
+function clearChartSelection(chartId) {
+  CHART_SELECTIONS[chartId].clear();
+  applyFilters();
+}
+
+function clearAllChartSelections() {
+  Object.keys(CHART_SELECTIONS).forEach(function(cid) { CHART_SELECTIONS[cid].clear(); });
+  applyFilters();
+}
+
+function hasAnySelection() {
+  return Object.keys(CHART_SELECTIONS).some(function(cid) { return CHART_SELECTIONS[cid].size > 0; });
+}
+
 /* ============================================================
  * 取資料
  * ============================================================ */
@@ -630,6 +749,8 @@ function initFiltersFromData() {
 
 function rebuildSeniorityChips() {
   var mode = $('senMode').value;
+  // 切換模式時清除年資圖表交叉選取（避免舊 label 殘留導致篩不到資料）
+  if (CHART_SELECTIONS.chartSeniority) CHART_SELECTIONS.chartSeniority.clear();
   var container = $('senChips');
   container.innerHTML = '';
   var options = [];
@@ -658,6 +779,8 @@ function resetFilters() {
   $('startDate').value = '';
   $('endDate').value = '';
   document.querySelectorAll('.chip.active').forEach(function(c) { c.classList.remove('active'); });
+  // 同時清除所有圖表交叉選取
+  Object.keys(CHART_SELECTIONS).forEach(function(cid) { CHART_SELECTIONS[cid].clear(); });
   initFiltersFromData();
   applyFilters();
 }
@@ -687,6 +810,9 @@ function applyFilters() {
     return true;
   });
 
+  // 再套用所有圖表交叉篩選（影響 KPI 和狀態列）
+  FILTERED = applyChartSelections(FILTERED, null);
+
   renderStatus();
   renderKPIs();
   renderCharts();
@@ -696,7 +822,33 @@ function renderStatus() {
   var st = $('filterStatus');
   var tot = ALL_RECORDS.length;
   var f = FILTERED.length;
-  st.innerHTML = '已套用篩選：共 <strong>' + f + '</strong> / ' + tot + ' 筆異常事件';
+  var html = '已套用篩選：共 <strong>' + f + '</strong> / ' + tot + ' 筆異常事件';
+  // 顯示圖表交叉選取
+  var tags = [];
+  Object.keys(CHART_SELECTIONS).forEach(function(cid) {
+    var sel = CHART_SELECTIONS[cid];
+    if (sel.size > 0) {
+      var name = CHART_DISPLAY_NAMES[cid];
+      var vals = Array.from(sel).join('、');
+      tags.push('<span class="sel-tag">' + name + '：' + vals + '</span>');
+    }
+  });
+  if (tags.length) {
+    html += ' ｜ <strong style="color:var(--primary);">圖表選取</strong> ' + tags.join('');
+    html += '<button class="btn-mini" onclick="clearAllChartSelections()">✕ 清除全部選取</button>';
+  } else {
+    html += ' <span style="color:var(--text-muted); font-size:11px;">（提示：點擊任一圖表元素可進行交叉篩選）</span>';
+  }
+  st.innerHTML = html;
+
+  // 同步更新各 chart card 的選取狀態樣式
+  Object.keys(CHART_SELECTIONS).forEach(function(cid) {
+    var card = document.querySelector('.chart-card[data-chart="' + cid + '"]');
+    if (card) {
+      if (CHART_SELECTIONS[cid].size > 0) card.classList.add('has-selection');
+      else card.classList.remove('has-selection');
+    }
+  });
 }
 
 /* ============================================================
@@ -754,6 +906,15 @@ function sortedEntries(obj, descByValue) {
   return arr;
 }
 
+/* 依選取狀態決定每個 slice 的顏色（未選取時降低透明度） */
+function selectiveColors(labels, sel) {
+  return labels.map(function(label, i) {
+    var c = PALETTE[i % PALETTE.length];
+    if (sel && sel.size > 0 && !sel.has(label)) return c + '40'; // 25% alpha
+    return c;
+  });
+}
+
 function makeDonutOrPie(canvasId, dataMap, opts) {
   destroyChart(canvasId);
   var entries = sortedEntries(dataMap, true);
@@ -765,13 +926,14 @@ function makeDonutOrPie(canvasId, dataMap, opts) {
     return;
   }
   var cv = $(canvasId);
+  var sel = CHART_SELECTIONS[canvasId];
   CHARTS[canvasId] = new Chart(cv, {
     type: opts && opts.type === 'pie' ? 'pie' : 'doughnut',
     data: {
       labels: labels,
       datasets: [{
         data: values,
-        backgroundColor: labels.map(function(_, i) { return PALETTE[i % PALETTE.length]; }),
+        backgroundColor: selectiveColors(labels, sel),
         borderColor: '#fff',
         borderWidth: 2
       }]
@@ -779,10 +941,23 @@ function makeDonutOrPie(canvasId, dataMap, opts) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      onClick: function(evt, elements) {
+        if (!elements.length) return;
+        var label = this.data.labels[elements[0].index];
+        toggleChartSelection(canvasId, label);
+      },
+      onHover: function(evt, elements) {
+        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
       plugins: {
         legend: {
           position: 'right',
-          labels: { boxWidth: 12, font: { size: 11 } }
+          labels: { boxWidth: 12, font: { size: 11 } },
+          onClick: function(e, item, legend) {
+            // 圖例點擊也觸發選取
+            var label = item.text;
+            toggleChartSelection(canvasId, label);
+          }
         },
         tooltip: {
           callbacks: {
@@ -805,19 +980,33 @@ function makeBar(canvasId, labels, values, color) {
     return;
   }
   var cv = $(canvasId);
+  var sel = CHART_SELECTIONS[canvasId];
+  var bgColors = labels.map(function(label, i) {
+    var c = color || PALETTE[i % PALETTE.length];
+    if (sel && sel.size > 0 && !sel.has(label)) return c + '40';
+    return c;
+  });
   CHARTS[canvasId] = new Chart(cv, {
     type: 'bar',
     data: {
       labels: labels,
       datasets: [{
         data: values,
-        backgroundColor: labels.map(function(_, i) { return color || PALETTE[i % PALETTE.length]; }),
+        backgroundColor: bgColors,
         borderRadius: 4
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      onClick: function(evt, elements) {
+        if (!elements.length) return;
+        var label = this.data.labels[elements[0].index];
+        toggleChartSelection(canvasId, label);
+      },
+      onHover: function(evt, elements) {
+        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -833,28 +1022,30 @@ function makeBar(canvasId, labels, values, color) {
   });
 }
 
-function makeMonthlyLine(canvasId) {
+function makeMonthlyLine(canvasId, sourceData) {
   destroyChart(canvasId);
+  var data = sourceData || FILTERED;
   // 收集所有出現過的月份
   var monthSet = {};
   var tubeSet = {};
-  FILTERED.forEach(function(r) {
+  data.forEach(function(r) {
     if (!r.ym) return;
     monthSet[r.ym] = true;
     if (r.tubeType) tubeSet[r.tubeType] = true;
   });
-  var months = Object.keys(monthSet).sort(); // ISO ym 字串自然順序
+  var months = Object.keys(monthSet).sort();
   var tubes = Object.keys(tubeSet);
   if (!months.length) {
     showEmpty(canvasId);
     return;
   }
   var cv = $(canvasId);
+  var sel = CHART_SELECTIONS[canvasId];
   // 每種管路一條線
   var datasets = tubes.map(function(t, i) {
     var color = PALETTE[i % PALETTE.length];
     var counts = months.map(function(m) {
-      return FILTERED.filter(function(r) { return r.ym === m && r.tubeType === t; }).length;
+      return data.filter(function(r) { return r.ym === m && r.tubeType === t; }).length;
     });
     return {
       label: t,
@@ -863,7 +1054,12 @@ function makeMonthlyLine(canvasId) {
       backgroundColor: color + '33',
       tension: 0.25,
       fill: false,
-      pointRadius: 3
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: months.map(function(m) {
+        if (sel && sel.size > 0 && !sel.has(m)) return color + '40';
+        return color;
+      })
     };
   });
   CHARTS[canvasId] = new Chart(cv, {
@@ -873,6 +1069,16 @@ function makeMonthlyLine(canvasId) {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
+      onClick: function(evt, elements) {
+        // 從 X 軸位置取得月份
+        var pts = this.getElementsAtEventForMode(evt, 'index', { intersect: false }, false);
+        if (!pts.length) return;
+        var label = this.data.labels[pts[0].index];
+        toggleChartSelection(canvasId, label);
+      },
+      onHover: function(evt) {
+        evt.native.target.style.cursor = 'pointer';
+      },
       plugins: {
         legend: {
           position: 'top',
@@ -897,19 +1103,42 @@ function renderCharts() {
     }
   });
 
+  // 為了讓「被點擊的圖」仍能看到所有切片，每張圖用「除自己外所有選取」過濾的資料
+  // baseData = top-bar filters applied (從 ALL_RECORDS 重新計算,避免被 self-selection 限縮)
+  var top = $('startDate').value, end = $('endDate').value;
+  var shifts = getCheckedChips('shiftChips');
+  var senMode = $('senMode').value;
+  var senSel = getCheckedChips('senChips');
+  var baseData = ALL_RECORDS.filter(function(r) {
+    if (top && r.date < top) return false;
+    if (end && r.date > end) return false;
+    if (shifts.length && shifts.indexOf(r.shift) < 0) return false;
+    if (senSel.length) {
+      if (senMode === 'years') {
+        var lbl = getBucketLabel(SENIORITY_BUCKETS, r.totalSeniority);
+        if (!lbl || senSel.indexOf(lbl) < 0) return false;
+      } else {
+        if (!r.level || senSel.indexOf(r.level) < 0) return false;
+      }
+    }
+    return true;
+  });
+  function dataFor(chartId) { return applyChartSelections(baseData, chartId); }
+
   // 異常管路種類
-  makeDonutOrPie('chartTube', countBy(FILTERED, function(r) { return r.tubeType; }));
+  makeDonutOrPie('chartTube', countBy(dataFor('chartTube'), function(r) { return r.tubeType; }));
 
   // 異常事件原因
-  makeDonutOrPie('chartReason', countBy(FILTERED, function(r) { return r.reason; }));
+  makeDonutOrPie('chartReason', countBy(dataFor('chartReason'), function(r) { return r.reason; }));
 
   // 病人性別比例
-  makeDonutOrPie('chartGender', countBy(FILTERED, function(r) { return r.gender; }), { type: 'pie' });
+  makeDonutOrPie('chartGender', countBy(dataFor('chartGender'), function(r) { return r.gender; }), { type: 'pie' });
 
   // 異常事件 - 年齡
+  var ageData = dataFor('chartAge');
   var ageMap = {};
   AGE_BUCKETS.forEach(function(b) { ageMap[b.label] = 0; });
-  FILTERED.forEach(function(r) {
+  ageData.forEach(function(r) {
     var lbl = getBucketLabel(AGE_BUCKETS, r.age);
     if (lbl) ageMap[lbl]++;
   });
@@ -918,22 +1147,22 @@ function renderCharts() {
   makeBar('chartAge', ageLabels, ageValues);
 
   // 每月管路種類
-  makeMonthlyLine('chartMonthly');
+  makeMonthlyLine('chartMonthly', dataFor('chartMonthly'));
 
-  // 異常事件年資別（依當前模式）
-  var mode = $('senMode').value;
+  // 異常事件年資別
+  var senData = dataFor('chartSeniority');
   var senLabels, senValues;
-  if (mode === 'years') {
+  if (senMode === 'years') {
     var senMap = {};
     SENIORITY_BUCKETS.forEach(function(b) { senMap[b.label] = 0; });
-    FILTERED.forEach(function(r) {
+    senData.forEach(function(r) {
       var lbl = getBucketLabel(SENIORITY_BUCKETS, r.totalSeniority);
       if (lbl) senMap[lbl]++;
     });
     senLabels = SENIORITY_BUCKETS.map(function(b) { return b.label; });
     senValues = senLabels.map(function(l) { return senMap[l] || 0; });
   } else {
-    var levelMap = countBy(FILTERED, function(r) { return r.level; });
+    var levelMap = countBy(senData, function(r) { return r.level; });
     var keys = Object.keys(levelMap).sort();
     senLabels = keys;
     senValues = keys.map(function(k) { return levelMap[k]; });
@@ -941,13 +1170,12 @@ function renderCharts() {
   makeBar('chartSeniority', senLabels, senValues, '#3b82f6');
 
   // 異常事件班別
-  var shiftMap = countBy(FILTERED, function(r) { return r.shift; });
-  // 依 D/E/N 順序顯示
+  var shiftData = dataFor('chartShift');
+  var shiftMap = countBy(shiftData, function(r) { return r.shift; });
   var orderedShift = {};
   SHIFT_OPTIONS.forEach(function(s) {
     if (shiftMap[s]) orderedShift[(SHIFT_LABELS[s] || s)] = shiftMap[s];
   });
-  // 也把不在標準清單的塞入
   Object.keys(shiftMap).forEach(function(k) {
     if (SHIFT_OPTIONS.indexOf(k) < 0) orderedShift[k] = shiftMap[k];
   });
