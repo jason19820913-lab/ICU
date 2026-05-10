@@ -297,6 +297,172 @@
   .chart-card.span-6 { grid-column: span 6; }
   .chart-card.span-12 { grid-column: span 12; }
 
+  /* 個案明細區 */
+  .detail-section {
+    margin-top: 24px;
+  }
+  .section-title {
+    margin: 16px 0 12px 0;
+    padding: 8px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    border-top: 2px solid var(--border);
+    padding-top: 16px;
+  }
+  .detail-table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .table-toolbar {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    background: #fafbfc;
+  }
+  .search-group {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    color: var(--text-muted);
+    font-size: 13px;
+    pointer-events: none;
+  }
+  .search-group input {
+    width: 100%;
+    padding: 8px 32px 8px 32px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+  }
+  .search-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(185, 28, 44, 0.1);
+  }
+  .search-clear {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .search-clear:hover { background: #f3f4f6; }
+  .count-pill {
+    background: var(--primary);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .table-scroll {
+    max-height: 600px;
+    overflow-y: auto;
+  }
+  .detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .detail-table thead th {
+    position: sticky;
+    top: 0;
+    background: #f3f4f6;
+    color: var(--text);
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: 700;
+    border-bottom: 2px solid var(--border);
+    z-index: 5;
+    white-space: nowrap;
+  }
+  .detail-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+  }
+  .detail-table tbody tr.case-row {
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .detail-table tbody tr.case-row:hover { background: #fef9f9; }
+  .detail-table tbody tr.case-row.expanded { background: #fef2f2; }
+  .desc-col { min-width: 280px; }
+  .desc-cell {
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .desc-cell .desc-trunc {
+    display: inline;
+  }
+  .desc-cell .more-tag {
+    display: inline-block;
+    color: var(--primary);
+    font-size: 11px;
+    margin-left: 6px;
+    font-weight: 600;
+  }
+  .case-detail-row td {
+    background: #fef9f9;
+    padding: 14px 18px !important;
+    border-left: 3px solid var(--primary);
+  }
+  .case-detail-row .full-desc {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 13px;
+  }
+  .case-detail-row .full-desc-empty {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-yes { background: #fef2f2; color: #b91c2c; }
+  .badge-no  { background: #f0fdf4; color: #15803d; }
+  .badge-shift-D { background: #fef3c7; color: #92400e; }
+  .badge-shift-E { background: #fee2e2; color: #b91c2c; }
+  .badge-shift-N { background: #e0e7ff; color: #3730a3; }
+  .badge-sev-無傷害 { background: #d1fae5; color: #065f46; }
+  .badge-sev-輕度  { background: #fef3c7; color: #92400e; }
+  .badge-sev-中度  { background: #fed7aa; color: #9a3412; }
+  .badge-sev-重度  { background: #fecaca; color: #991b1b; }
+  .badge-sac-1 { background: #fecaca; color: #7f1d1d; }
+  .badge-sac-2 { background: #fed7aa; color: #9a3412; }
+  .badge-sac-3 { background: #fef3c7; color: #92400e; }
+  .badge-sac-4 { background: #ddd6fe; color: #5b21b6; }
+  .empty-row td {
+    padding: 30px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  mark.kw-hit { background: #fef08a; padding: 0 2px; border-radius: 2px; }
+
   /* Loading & empty states */
   .overlay {
     position: fixed;
@@ -524,6 +690,47 @@
       <div class="chart-wrap"><canvas id="chartShift"></canvas></div>
     </div>
   </div>
+
+  <!-- 個案明細與成因分析 -->
+  <div class="detail-section">
+    <h2 class="section-title">📋 個案明細與成因分析</h2>
+
+    <!-- 關鍵字熱詞圖 -->
+    <div class="chart-card" data-chart="chartKeyword" style="margin-bottom:12px;">
+      <h3><span>情況說明關鍵字統計（點選可篩選）</span><span class="clear-x" onclick="clearChartSelection('chartKeyword')" title="清除此圖選取">✕</span></h3>
+      <div class="chart-wrap" style="min-height: 320px;"><canvas id="chartKeyword"></canvas></div>
+    </div>
+
+    <!-- 個案明細表 -->
+    <div class="detail-table-wrap">
+      <div class="table-toolbar">
+        <div class="search-group">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="descSearch" placeholder="搜尋情況說明關鍵字…（例：掙脫、翻身、kuzem、GCS）" oninput="onDescSearch()">
+          <button class="search-clear" id="searchClearBtn" style="display:none" onclick="clearDescSearch()">✕</button>
+        </div>
+        <span class="count-pill" id="detailCount">0 筆</span>
+      </div>
+      <div class="table-scroll">
+        <table class="detail-table" id="detailTable">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>班別</th>
+              <th>管路</th>
+              <th>原因</th>
+              <th>約束</th>
+              <th>重新插管</th>
+              <th>嚴重程度</th>
+              <th>SAC</th>
+              <th class="desc-col">情況說明</th>
+            </tr>
+          </thead>
+          <tbody id="detailBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -577,7 +784,8 @@ var CHART_SELECTIONS = {
   chartAge: new Set(),
   chartMonthly: new Set(),
   chartSeniority: new Set(),
-  chartShift: new Set()
+  chartShift: new Set(),
+  chartKeyword: new Set()
 };
 
 var CHART_DISPLAY_NAMES = {
@@ -587,8 +795,44 @@ var CHART_DISPLAY_NAMES = {
   chartAge: '年齡',
   chartMonthly: '月份',
   chartSeniority: '年資',
-  chartShift: '班別'
+  chartShift: '班別',
+  chartKeyword: '關鍵字'
 };
+
+// 情況說明關鍵字字典（label = 圖表上顯示，patterns = 在 desc 中匹配的正則 OR 列表）
+var DESC_KEYWORDS = [
+  { label: '自拔',           patterns: ['自拔'] },
+  { label: '掙脫/鬆脫約束',   patterns: ['掙脫', '鬆脫', '繃開', '解開約束'] },
+  { label: '暫解約束',        patterns: ['暫解約束', '暫時解開'] },
+  { label: '未約束',          patterns: ['無約束', '未約束', '未給約束', '沒有約束', '不需約束', '無需約束', '不用約束'] },
+  { label: '軟式約束',        patterns: ['軟式約束', '軟式'] },
+  { label: '翻身/移位',       patterns: ['翻身'] },
+  { label: '躁動/情緒激動',   patterns: ['躁動', '情緒激動', '情緒'] },
+  { label: '以頭就手',        patterns: ['以頭就手', '頭就手'] },
+  { label: 'GCS clear/可配合',patterns: ['GCS clear', 'gcs clear', 'GCS Clear', '可配合', 'GCS E4'] },
+  { label: '管路阻塞',        patterns: ['阻塞', '不順', '推不動', '打不進'] },
+  { label: '繞嘴/反折',       patterns: ['繞嘴', '反折', '折到'] },
+  { label: 'Cuff 漏氣',       patterns: ['cuff漏氣', 'cuff 漏氣', 'Cuff漏氣', 'leak'] },
+  { label: '管路滲漏',        patterns: ['滲漏', '滲尿', '紅腫', '腫脹', '發紅'] },
+  { label: 'Kutem/Kuzem 粉劑',patterns: ['kuzem', 'kutem', 'Kutem', 'Kuzem', 'KUZEM', 'KUTEM'] },
+  { label: '交接班',          patterns: ['交接班', '交班'] },
+  { label: '會客/家屬',       patterns: ['會客', '家屬'] },
+  { label: '水球異常',        patterns: ['水球', 'ballon', 'bollon', 'balloon'] },
+  { label: '產品瑕疵',        patterns: ['瑕疵'] },
+  { label: '咳嗽',            patterns: ['咳嗽'] },
+  { label: '抓癢/觸摸',       patterns: ['抓癢', '觸摸', '抓'] }
+];
+
+function getMatchedKeywords(desc) {
+  if (!desc) return [];
+  var hits = [];
+  DESC_KEYWORDS.forEach(function(kw) {
+    if (kw.patterns.some(function(p) { return desc.indexOf(p) >= 0; })) {
+      hits.push(kw.label);
+    }
+  });
+  return hits;
+}
 
 var SHIFT_OPTIONS = ['D', 'E', 'N'];
 var SHIFT_LABELS = { D: 'D 白班', E: 'E 小夜', N: 'N 大夜' };
@@ -680,12 +924,35 @@ function applyChartSelections(records, exceptChartId) {
     if (cid === exceptChartId) return;
     var sel = CHART_SELECTIONS[cid];
     if (sel.size === 0) return;
-    records = records.filter(function(r) {
-      var lbl = getChartLabel(cid, r);
-      return lbl && sel.has(lbl);
-    });
+    if (cid === 'chartKeyword') {
+      records = records.filter(function(r) {
+        var hits = getMatchedKeywords(r.desc);
+        return hits.some(function(k) { return sel.has(k); });
+      });
+    } else {
+      records = records.filter(function(r) {
+        var lbl = getChartLabel(cid, r);
+        return lbl && sel.has(lbl);
+      });
+    }
   });
   return records;
+}
+
+/* 情況說明搜尋字串(全域,即時聯動) */
+var DESC_SEARCH = '';
+
+function onDescSearch() {
+  DESC_SEARCH = ($('descSearch').value || '').trim();
+  $('searchClearBtn').style.display = DESC_SEARCH ? 'block' : 'none';
+  applyFilters();
+}
+
+function clearDescSearch() {
+  $('descSearch').value = '';
+  DESC_SEARCH = '';
+  $('searchClearBtn').style.display = 'none';
+  applyFilters();
 }
 
 function toggleChartSelection(chartId, label) {
@@ -806,6 +1073,12 @@ function resetFilters() {
   document.querySelectorAll('.chip.active').forEach(function(c) { c.classList.remove('active'); });
   // 同時清除所有圖表交叉選取
   Object.keys(CHART_SELECTIONS).forEach(function(cid) { CHART_SELECTIONS[cid].clear(); });
+  // 清除情況說明搜尋
+  $('descSearch').value = '';
+  DESC_SEARCH = '';
+  $('searchClearBtn').style.display = 'none';
+  // 收合所有展開的個案
+  EXPANDED_ROWS.clear();
   initFiltersFromData();
   applyFilters();
 }
@@ -838,9 +1111,19 @@ function applyFilters() {
   // 再套用所有圖表交叉篩選（影響 KPI 和狀態列）
   FILTERED = applyChartSelections(FILTERED, null);
 
+  // 情況說明關鍵字搜尋
+  if (DESC_SEARCH) {
+    var q = DESC_SEARCH.toLowerCase();
+    FILTERED = FILTERED.filter(function(r) {
+      return r.desc && r.desc.toLowerCase().indexOf(q) >= 0;
+    });
+  }
+
   renderStatus();
   renderKPIs();
   renderCharts();
+  renderKeywordChart();
+  renderDetailTable();
 }
 
 function renderStatus() {
@@ -1214,6 +1497,208 @@ function renderCharts() {
     if (SHIFT_OPTIONS.indexOf(k) < 0) orderedShift[k] = shiftMap[k];
   });
   makeDonutOrPie('chartShift', orderedShift);
+}
+
+/* ============================================================
+ * 關鍵字熱詞圖（橫向長條）
+ * ============================================================ */
+function renderKeywordChart() {
+  destroyChart('chartKeyword');
+  // 確保 canvas 存在(可能被 showEmpty 替換掉)
+  var existing = document.getElementById('chartKeyword');
+  if (!existing) {
+    var card = document.querySelector('.chart-card[data-chart="chartKeyword"]');
+    var wrap = card && card.querySelector('.chart-wrap');
+    if (wrap) wrap.innerHTML = '<canvas id="chartKeyword"></canvas>';
+  }
+  // 為了讓自己被選取後仍能看到所有關鍵字,使用「除自己外」的資料
+  var top = $('startDate').value, end = $('endDate').value;
+  var shifts = getCheckedChips('shiftChips');
+  var senMode = $('senMode').value;
+  var senSel = getCheckedChips('senChips');
+  var baseData = ALL_RECORDS.filter(function(r) {
+    if (top && r.date < top) return false;
+    if (end && r.date > end) return false;
+    if (shifts.length && shifts.indexOf(r.shift) < 0) return false;
+    if (senSel.length) {
+      if (senMode === 'years') {
+        var lbl = getBucketLabel(SENIORITY_BUCKETS, r.totalSeniority);
+        if (!lbl || senSel.indexOf(lbl) < 0) return false;
+      } else {
+        if (!r.level || senSel.indexOf(r.level) < 0) return false;
+      }
+    }
+    return true;
+  });
+  var data = applyChartSelections(baseData, 'chartKeyword');
+  if (DESC_SEARCH) {
+    var q = DESC_SEARCH.toLowerCase();
+    data = data.filter(function(r) { return r.desc && r.desc.toLowerCase().indexOf(q) >= 0; });
+  }
+
+  // 計算每個關鍵字的命中數
+  var counts = {};
+  DESC_KEYWORDS.forEach(function(kw) { counts[kw.label] = 0; });
+  data.forEach(function(r) {
+    getMatchedKeywords(r.desc).forEach(function(k) { counts[k] = (counts[k] || 0) + 1; });
+  });
+
+  // 排序並過濾掉 0 的
+  var entries = Object.keys(counts).map(function(k) { return [k, counts[k]]; });
+  entries.sort(function(a, b) { return b[1] - a[1]; });
+  entries = entries.filter(function(e) { return e[1] > 0; });
+
+  if (!entries.length) {
+    showEmpty('chartKeyword');
+    return;
+  }
+
+  var labels = entries.map(function(e) { return e[0]; });
+  var values = entries.map(function(e) { return e[1]; });
+  var sel = CHART_SELECTIONS.chartKeyword;
+  var bgColors = labels.map(function(label, i) {
+    var c = PALETTE[i % PALETTE.length];
+    if (sel && sel.size > 0 && !sel.has(label)) return c + '40';
+    return c;
+  });
+
+  var cv = $('chartKeyword');
+  CHARTS['chartKeyword'] = new Chart(cv, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: bgColors,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      onClick: function(evt, elements) {
+        if (!elements.length) return;
+        var label = this.data.labels[elements[0].index];
+        toggleChartSelection('chartKeyword', label);
+      },
+      onHover: function(evt, elements) {
+        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ctx.parsed.x + ' 件提及'; }
+          }
+        }
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { precision: 0 } },
+        y: { ticks: { font: { size: 12 } } }
+      }
+    }
+  });
+}
+
+/* ============================================================
+ * 個案明細表
+ * ============================================================ */
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function highlightSearch(text, query) {
+  if (!text) return '';
+  var safe = escapeHtml(text);
+  if (!query) return safe;
+  // 注意:替換時要小心 HTML 已經 escape 過,所以 query 也要 escape
+  var qSafe = escapeHtml(query);
+  // 用簡單的字串切割避免 regex 問題
+  var lower = safe.toLowerCase();
+  var qLower = qSafe.toLowerCase();
+  var result = '';
+  var i = 0;
+  while (i < safe.length) {
+    var idx = lower.indexOf(qLower, i);
+    if (idx < 0) { result += safe.slice(i); break; }
+    result += safe.slice(i, idx) + '<mark class="kw-hit">' + safe.slice(idx, idx + qSafe.length) + '</mark>';
+    i = idx + qSafe.length;
+  }
+  return result;
+}
+
+var EXPANDED_ROWS = new Set();
+
+function renderDetailTable() {
+  var body = $('detailBody');
+  $('detailCount').textContent = FILTERED.length + ' 筆';
+
+  if (!FILTERED.length) {
+    body.innerHTML = '<tr class="empty-row"><td colspan="9">目前篩選條件下沒有符合的個案</td></tr>';
+    return;
+  }
+
+  // 依日期由近到遠排序,複製陣列避免影響 FILTERED 順序
+  var sorted = FILTERED.slice().sort(function(a, b) {
+    return (a.date < b.date) ? 1 : (a.date > b.date) ? -1 : 0;
+  });
+
+  var html = '';
+  var TRUNC = 60; // 截斷字元數
+  sorted.forEach(function(r, idx) {
+    var rowKey = r.date + '_' + r.mrn + '_' + r.tubeType + '_' + idx;
+    var expanded = EXPANDED_ROWS.has(rowKey);
+    var desc = r.desc || '';
+    var truncated = desc.length > TRUNC ? desc.slice(0, TRUNC) + '…' : desc;
+    var hasMore = desc.length > TRUNC;
+
+    var shiftBadge = r.shift ? '<span class="badge badge-shift-' + r.shift + '">' + (SHIFT_LABELS[r.shift] || r.shift) + '</span>' : '-';
+    var restraintBadge = r.restraint === '是' ? '<span class="badge badge-yes">是</span>' :
+                         r.restraint === '否' ? '<span class="badge badge-no">否</span>' : '-';
+    var reintubBadge = r.reintubation === '是' ? '<span class="badge badge-yes">是</span>' :
+                       r.reintubation === '否' ? '<span class="badge badge-no">否</span>' : '-';
+    var sevBadge = r.severity ? '<span class="badge badge-sev-' + r.severity + '">' + r.severity + '</span>' : '-';
+    var sacBadge = r.sac ? '<span class="badge badge-sac-' + r.sac + '">' + r.sac + '</span>' : '-';
+
+    html += '<tr class="case-row' + (expanded ? ' expanded' : '') + '" onclick="toggleCaseRow(\'' + escapeHtml(rowKey) + '\')">';
+    html += '<td>' + escapeHtml(r.date) + '</td>';
+    html += '<td>' + shiftBadge + '</td>';
+    html += '<td>' + escapeHtml(r.tubeType) + '</td>';
+    html += '<td>' + escapeHtml(r.reason) + '</td>';
+    html += '<td>' + restraintBadge + '</td>';
+    html += '<td>' + reintubBadge + '</td>';
+    html += '<td>' + sevBadge + '</td>';
+    html += '<td>' + sacBadge + '</td>';
+    html += '<td class="desc-cell"><span class="desc-trunc">' + highlightSearch(truncated, DESC_SEARCH) + '</span>';
+    if (hasMore) html += '<span class="more-tag">' + (expanded ? '收合 ▲' : '展開 ▼') + '</span>';
+    html += '</td>';
+    html += '</tr>';
+
+    if (expanded) {
+      html += '<tr class="case-detail-row"><td colspan="9">';
+      if (desc) {
+        html += '<div class="full-desc">' + highlightSearch(desc, DESC_SEARCH) + '</div>';
+      } else {
+        html += '<div class="full-desc full-desc-empty">（此筆未填情況說明）</div>';
+      }
+      html += '</td></tr>';
+    }
+  });
+
+  body.innerHTML = html;
+}
+
+function toggleCaseRow(rowKey) {
+  if (EXPANDED_ROWS.has(rowKey)) EXPANDED_ROWS.delete(rowKey);
+  else EXPANDED_ROWS.add(rowKey);
+  renderDetailTable();
 }
 
 /* ============================================================
