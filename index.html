@@ -160,7 +160,7 @@
   /* KPI cards */
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: 16px;
   }
@@ -183,7 +183,14 @@
   .kpi-card.k-restraint::before { background: #f59e0b; }
   .kpi-card.k-reintub::before { background: #ef4444; }
   .kpi-card.k-noharm::before { background: var(--green); }
-  .kpi-card.k-sac::before { background: #8b5cf6; }
+  .kpi-card.k-sac1::before { background: #b91c2c; }
+  .kpi-card.k-sac2::before { background: #ea580c; }
+  .kpi-card.k-sac3::before { background: #d97706; }
+  .kpi-card.k-sac4::before { background: #8b5cf6; }
+  .kpi-card.k-sac1 .kpi-rate { color: #b91c2c; }
+  .kpi-card.k-sac2 .kpi-rate { color: #ea580c; }
+  .kpi-card.k-sac3 .kpi-rate { color: #d97706; }
+  .kpi-card.k-sac4 .kpi-rate { color: #8b5cf6; }
   .kpi-label {
     font-size: 12px;
     color: var(--text-muted);
@@ -379,6 +386,9 @@
   }
 
   /* Responsive */
+  @media (max-width: 1400px) {
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+  }
   @media (max-width: 1200px) {
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
     .chart-card.span-3 { grid-column: span 6; }
@@ -460,8 +470,23 @@
       <div class="kpi-main"><span id="kpi-noharm">0</span><span class="unit">件</span></div>
       <div class="kpi-rate">無傷害率 <span id="kpi-noharm-rate">0%</span></div>
     </div>
-    <div class="kpi-card k-sac">
-      <div class="kpi-label">SAC分級-4級</div>
+    <div class="kpi-card k-sac1">
+      <div class="kpi-label">SAC分級-1級（極重度）</div>
+      <div class="kpi-main"><span id="kpi-sac1">0</span><span class="unit">件</span></div>
+      <div class="kpi-rate">SAC1級率 <span id="kpi-sac1-rate">0%</span></div>
+    </div>
+    <div class="kpi-card k-sac2">
+      <div class="kpi-label">SAC分級-2級（重度）</div>
+      <div class="kpi-main"><span id="kpi-sac2">0</span><span class="unit">件</span></div>
+      <div class="kpi-rate">SAC2級率 <span id="kpi-sac2-rate">0%</span></div>
+    </div>
+    <div class="kpi-card k-sac3">
+      <div class="kpi-label">SAC分級-3級（中度）</div>
+      <div class="kpi-main"><span id="kpi-sac3">0</span><span class="unit">件</span></div>
+      <div class="kpi-rate">SAC3級率 <span id="kpi-sac3-rate">0%</span></div>
+    </div>
+    <div class="kpi-card k-sac4">
+      <div class="kpi-label">SAC分級-4級（輕度）</div>
       <div class="kpi-main"><span id="kpi-sac4">0</span><span class="unit">件</span></div>
       <div class="kpi-rate">SAC4級率 <span id="kpi-sac4-rate">0%</span></div>
     </div>
@@ -859,6 +884,9 @@ function renderKPIs() {
   var restraint = FILTERED.filter(function(r) { return r.restraint === '是'; }).length;
   var reintub   = FILTERED.filter(function(r) { return r.reintubation === '是'; }).length;
   var noharm    = FILTERED.filter(function(r) { return r.severity === '無傷害'; }).length;
+  var sac1      = FILTERED.filter(function(r) { return r.sac === 1; }).length;
+  var sac2      = FILTERED.filter(function(r) { return r.sac === 2; }).length;
+  var sac3      = FILTERED.filter(function(r) { return r.sac === 3; }).length;
   var sac4      = FILTERED.filter(function(r) { return r.sac === 4; }).length;
 
   $('kpi-total').textContent = n;
@@ -868,6 +896,12 @@ function renderKPIs() {
   $('kpi-reintub-rate').textContent = fmtPct(reintub, n);
   $('kpi-noharm').textContent = noharm;
   $('kpi-noharm-rate').textContent = fmtPct(noharm, n);
+  $('kpi-sac1').textContent = sac1;
+  $('kpi-sac1-rate').textContent = fmtPct(sac1, n);
+  $('kpi-sac2').textContent = sac2;
+  $('kpi-sac2-rate').textContent = fmtPct(sac2, n);
+  $('kpi-sac3').textContent = sac3;
+  $('kpi-sac3-rate').textContent = fmtPct(sac3, n);
   $('kpi-sac4').textContent = sac4;
   $('kpi-sac4-rate').textContent = fmtPct(sac4, n);
 }
